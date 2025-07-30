@@ -57,8 +57,9 @@
         try {
           const response = await fetch('/validate-merchant', {
             method: 'POST',
+            console.log("event url:", event.validationURL);
             //test: "https://apple-pay-gateway-cert.apple.com/paymentservices/startSession"
-            body: JSON.stringify({ validationURL: event.validationURL }),
+            body: JSON.stringify({ validationURL: "https://apple-pay-gateway-cert.apple.com/paymentservices/startSession" }),
             headers: { 'Content-Type': 'application/json' }
           });
 
@@ -99,7 +100,7 @@
 
       session.oncancel = (event) => {
         console.log("Apple Pay session canceled");
-        console.log(event);
+        console.log(JSON.stringify(event, null, 2));
       };
 
       session.onshippingcontactselected = (event) => {
