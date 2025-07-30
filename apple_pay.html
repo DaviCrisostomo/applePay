@@ -54,10 +54,11 @@
       const session = new ApplePaySession(3, paymentRequest);
 
       session.onvalidatemerchant = async (event) => {
+        
+        console.log("event url:", event.validationURL);
         try {
           const response = await fetch('/validate-merchant', {
             method: 'POST',
-            console.log("event url:", event.validationURL);
             //test: "https://apple-pay-gateway-cert.apple.com/paymentservices/startSession"
             body: JSON.stringify({ validationURL: "https://apple-pay-gateway-cert.apple.com/paymentservices/startSession" }),
             headers: { 'Content-Type': 'application/json' }
