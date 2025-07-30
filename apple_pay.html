@@ -101,7 +101,7 @@
 
       session.oncancel = (event) => {
         console.log("Apple Pay session canceled");
-        console.log(JSON.stringify(event, null, 2));
+        console.log(JSON.stringify({ ...event }, null, 2));
       };
 
       session.onshippingcontactselected = (event) => {
