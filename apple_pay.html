@@ -47,19 +47,29 @@
         canMakePayments();
       }
 
-      async function canMakePayments(){
+      async function canMakePayments() {
         console.log("Can make payments:", await ApplePaySession.canMakePayments());
       }
 
-      const session = new ApplePaySession(3, paymentRequest);
+      // ✅ Detect latest supported Apple Pay version dynamically
+      let version = 12; // max supported as of 2025
+      while (version > 0 && !ApplePaySession.supportsVersion(version)) {
+        version--;
+      }
+
+      if (version === 0) {
+        console.error("Apple Pay not supported on this device.");
+        return;
+      }
+
+      console.log("Using Apple Pay version:", version);
+      const session = new ApplePaySession(version, paymentRequest);
 
       session.onvalidatemerchant = async (event) => {
-        
         console.log("event url:", event.validationURL);
         try {
           const response = await fetch('/validate-merchant', {
             method: 'POST',
-            //test: "https://apple-pay-gateway-cert.apple.com/paymentservices/startSession"
             body: JSON.stringify({ validationURL: "https://apple-pay-gateway-cert.apple.com/paymentservices/startSession" }),
             headers: { 'Content-Type': 'application/json' }
           });
@@ -73,8 +83,6 @@
           }
 
           console.log('Merchant session data:', data);
-
-          // const parsed = JSON.parse(data);
           session.completeMerchantValidation(data);
         } catch (error) {
           console.error('Merchant validation failed:', error);
