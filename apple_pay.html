@@ -92,11 +92,10 @@
 
       session.onpaymentauthorized = (event) => {
         console.log("Requesting payment.");
-        const payment = event.payment;
-        console.log(payment.token);
+        console.log("payment token:", event.payment.token);
         fetch('/process-payment', {
           method: 'POST',
-          body: JSON.stringify({ token: payment.token }),
+          body: JSON.stringify({ token: event.payment.token }),
           headers: {
             'Content-Type': 'application/json'
           }
