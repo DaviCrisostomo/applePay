@@ -12,7 +12,7 @@ export class PayrocClient {
         this.#apiKey = process.env.PAYROC_API_KEY;
         this.#processingTerminalId = process.env.PROCESSING_TERMINAL_ID;
         this.#appleDomain = process.env.APPLE_DOMAIN;
-        this.#currency = process.env.CURRENCY;
+        this.#currency = process.env.TERMINAL_CURRENCY;
     }
 
     async getAppleSession(){
