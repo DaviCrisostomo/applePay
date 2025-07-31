@@ -75,8 +75,8 @@ export class PayrocClient {
     #getPaymentMethod(applePayload) {
         var encryptedData = this.#getEncryptedData(applePayload);
         return JSON.stringify({
-            "type": "digitalWallet",
-            "serviceProvider": "apple",
+            type: "digitalWallet",
+            serviceProvider: "apple",
             encryptedData
         });
     }
