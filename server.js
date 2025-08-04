@@ -53,7 +53,7 @@ app.post('/validate-merchant', async (req, res) => {
 
 app.post('/process-payment', async (req, res) => {
   try {
-    const hexToken = req.body.hexToken;
+    const hexToken = req.body.token;
     console.log("paymentData received:", hexToken);
     const result = await payrocClient.createPayment(
       1000, // amount in cents
