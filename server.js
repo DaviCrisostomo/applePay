@@ -53,12 +53,12 @@ app.post('/validate-merchant', async (req, res) => {
 
 app.post('/process-payment', async (req, res) => {
   try {
-    const paymentData = req.body.token.paymentData;
-    console.log("paymentData received:", paymentData);
+    const hexToken = req.body.hexToken;
+    console.log("paymentData received:", hexToken);
     const result = await payrocClient.createPayment(
       1000, // amount in cents
       "Apple Pay Payment",
-      JSON.stringify(paymentData)
+      hexToken
     );
 
     res.json(result);
