@@ -37,7 +37,8 @@ app.get('/.well-known/apple-developer-merchant-id-domain-association', (req, res
 app.get('/apple', (req, res) => res.sendFile(__dirname + '/apple_pay.html'));
 
 app.post('/validate-merchant', async (req, res) => {
-  const session = await payrocClient.getAppleSession();
+  const { validationURL } = req.body;
+  const session = await payrocClient.getAppleSession(validationURL);
   
   try {
     // The session is a JSON string inside session.applePaySessionResponse
