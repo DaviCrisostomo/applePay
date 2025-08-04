@@ -15,7 +15,7 @@ export class PayrocClient {
         this.#currency = process.env.TERMINAL_CURRENCY;
     }
 
-    async getAppleSession(){
+    async getAppleSession(validationURL){
         const reqUrl = `${process.env.PAYROC_API_HOST}/processing-terminals/${this.#processingTerminalId}/apple-pay-sessions`;
         const headers = await this.#getHeader();
         const response = await this.#fetchWithErrorHandling(reqUrl, {
@@ -23,7 +23,7 @@ export class PayrocClient {
             headers: headers,
             body: JSON.stringify({
                 appleDomainId: this.#appleDomain,
-                appleValidationUrl: "https://apple-pay-gateway-cert.apple.com/paymentservices/startSession"
+                appleValidationUrl: validationURL
             }),
         });
 
