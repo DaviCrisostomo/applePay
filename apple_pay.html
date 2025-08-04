@@ -70,7 +70,7 @@
         try {
           const response = await fetch('/validate-merchant', {
             method: 'POST',
-            body: JSON.stringify({ validationURL: "https://apple-pay-gateway-cert.apple.com/paymentservices/startSession" }),
+            body: JSON.stringify({ validationURL: event.validationURL }),
             headers: { 'Content-Type': 'application/json' }
           });
 
