@@ -33,10 +33,10 @@ export class PayrocClient {
     async createPayment(
         amount,
         description = "Apple Payment",
-        applePayload
+        hexToken
     ) {
         const paymentUrl = this.#getPaymentURL();
-        const paymentMethod = this.#getPaymentMethod(applePayload);
+        const paymentMethod = this.#getPaymentMethod(hexToken);
         const headers = await this.#getHeader();
 
         const response = await this.#fetchWithErrorHandling(paymentUrl, {
@@ -72,12 +72,12 @@ export class PayrocClient {
         return `${process.env.PAYROC_API_HOST}/payments`;
     }
 
-    #getPaymentMethod(applePayload) {
-        var encryptedData = this.#getEncryptedData(applePayload);
+    #getPaymentMethod(hexToken) {
+        //var encryptedData = this.#getEncryptedData(applePayload);
         return {
             type: "digitalWallet",
             serviceProvider: "apple",
-            encryptedData
+            encryptedData: hexToken
         };
     }
 
