@@ -35,6 +35,7 @@ app.get('/.well-known/apple-developer-merchant-id-domain-association', (req, res
 });
 
 app.get('/apple', (req, res) => res.sendFile(__dirname + '/apple_pay.html'));
+app.get('/salesquick', (req, res) => res.sendFile(__dirname + '/salesQuick.html'));
 
 app.post('/validate-merchant', async (req, res) => {
   const { validationURL } = req.body;
