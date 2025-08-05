@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Pay Checkout</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        #applePayButton { 
+            display: none; 
+            padding: 15px 30px; 
+            background: #000; 
+            color: #fff; 
+            border: none; 
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        #applePayButton:hover { background: #333; }
+        #status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            word-break: break-all;         /* 🔥 Important */
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            box-sizing: border-box;
+            overflow-x: auto;           /* 🔥 Adds scroll for long lines */
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        #amount { margin: 10px 0; padding: 10px; font-size: 16px; width: 100px; }
+    </style>
+</head>
+<body>
+    <div id="status" class="info">Payment was cancelled.</div>
+
+    <h1>Apple Pay Checkout</h1>
+    
+    <div>
+        <label for="amount">Amount ($): 1.00</label>
+        <input type="number" id="amount" value="1.00">
+    </div>
+    
+    <button id="applePayButton" style="display: block;">Buy with Apple Pay</button>
+
+    <script>
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = message;
+            statusDiv.className = type;
+        }
+
+        // Check Apple Pay availability
+        if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
+            document.getElementById('applePayButton').style.display = 'block';
+            updateStatus('Apple Pay is available on this device.', 'success');
+        } else {
+            updateStatus('Apple Pay is not available on this device or browser.', 'error');
+        }
+
+        document.getElementById('applePayButton').addEventListener('click', () => {
+            const amount = document.getElementById('amount').value;
+            
+            if (!amount || parseFloat(amount) <= 0) {
+                updateStatus('Please enter a valid amount.', 'error');
+                return;
+            }
+
+            const paymentRequest = {
+                countryCode: 'GB',
+                currencyCode: 'GBP',
+                supportedNetworks: ['visa', 'masterCard', 'amex', 'discover'],
+                merchantCapabilities: ['supports3DS'],
+                total: { 
+                    label: 'Test Payment', 
+                    amount: parseFloat(amount).toFixed(2)
+                }
+            };
+
+            updateStatus('Starting Apple Pay session...', 'info');
+            
+            const session = new ApplePaySession(3, paymentRequest);
+
+            session.onvalidatemerchant = event => {
+                // Show the Apple validation URL in the UI
+                updateStatus(
+                    `<strong>Apple Validation URL:</strong><br><code>${event.validationURL}</code><br><br>Validating merchant...`,
+                    'info'
+                );
+                
+                fetch('/validate_merchant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ validationURL: event.validationURL })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    session.completeMerchantValidation(data);
+                    // updateStatus('Merchant validated. Please authorize payment.', 'info');
+                    updateStatus('Merchant validated. Please authorize payment.<br><pre>' + JSON.stringify(data, null, 2) + '</pre>', 'info');
+
+                })
+                .catch(error => {
+                    console.error('Validation error:', error);
+                    session.abort();
+                    updateStatus('Merchant validation failed message 1 : ' + error.message, 'error');
+                    updateStatus('Merchant validation failed message 2 :<br><pre>' + JSON.stringify(error, null, 2) + '</pre>', 'error');
+
+                });
+            };
+
+            session.onpaymentauthorized = event => {
+                updateStatus('Processing payment...', 'info');
+                
+                const token = event.payment.token.paymentData;
+                // const hex = Array.from(new TextEncoder().encode(JSON.stringify(token)))
+                //     .map(b => ('00' + b.toString(16)).slice(-2))
+                //     .join('');
+
+                const encryptedData = event.payment.token.paymentData;
+
+                fetch('/process_payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        // encryptedData: hex,
+                        encryptedData: encryptedData,
+                        amount: parseFloat(amount)
+                    })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    console.log('Payment result:', result);
+                    
+                    if (result.success) {
+                        session.completePayment(ApplePaySession.STATUS_SUCCESS);
+                        updateStatus(
+                            `Payment successful!<br>
+                            Payment ID: ${result.paymentId}<br>
+                            Approval Code: ${result.approvalCode}`, 
+                            'success'
+                        );
+                    } else {
+                        session.completePayment(ApplePaySession.STATUS_FAILURE);
+                        updateStatus(
+                            `Payment failed: ${result.error}<br>
+                            ${result.responseMessage ? 'Details: ' + result.responseMessage : ''}`, 
+                            'error'
+                        );
+                    }
+                })
+                .catch(error => {
+                    console.error('Payment error:', error);
+                    session.completePayment(ApplePaySession.STATUS_FAILURE);
+                    updateStatus('Payment processing error: ' + error.message, 'error');
+                });
+            };
+
+            session.oncancel = event => {
+                updateStatus('Payment was cancelled.', 'info');
+            };
+
+            session.begin();
+        });
+    </script>
+
+</body></html>
