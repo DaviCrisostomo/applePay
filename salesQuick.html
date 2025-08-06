@@ -118,10 +118,16 @@
                 updateStatus('Processing payment...', 'info');
                 
                 const token = event.payment.token.paymentData;
-                // const hex = Array.from(new TextEncoder().encode(JSON.stringify(token)))
-                //     .map(b => ('00' + b.toString(16)).slice(-2))
-                //     .join('');
+                const encodedToken = Array.from(new TextEncoder().encode(JSON.stringify(token)))
+                     .map(b => ('00' + b.toString(16)).slice(-2))
+                     .join('');
 
+                const paymentDataBytes = new Uint8Array(event.payment.token.paymentData); // directly use it
+                const hex = Array.from(paymentDataBytes)
+                  .map(b => ('00' + b.toString(16)).slice(-2))
+                  .join('');
+                console.log('hex:', hex);
+                
                 const encryptedData = event.payment.token.paymentData;
 
                 fetch('/process-payment', {
@@ -129,7 +135,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         // encryptedData: hex,
-                        encryptedData: encryptedData,
+                        encryptedData: encodedToken,
                         amount: parseFloat(amount)
                     })
                 })
